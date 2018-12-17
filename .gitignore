@@ -1,0 +1,6 @@
+input.txt
+output.txt
+decomp.txt
+.gdb*
+peda*
+a.out
