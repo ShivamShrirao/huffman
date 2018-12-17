@@ -1,6 +1,8 @@
+.gitignore
 input.txt
 output.txt
 decomp.txt
 .gdb*
 peda*
 a.out
+map_file.c
