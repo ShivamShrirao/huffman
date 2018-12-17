@@ -30,11 +30,12 @@ ll* pop_el(ll *leaf , int ind);
 void ll_insert(ll *tree, int ind, node *val);
 void push_end(ll *leaf, node *var);
 
-#define LEN_ALPHA 26
-char alpha[]={'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'};
+#define LEN_ALPHA 128
+char alpha[LEN_ALPHA]={'\0'};
 size_t freq[LEN_ALPHA]={0};
 size_t codeTable[LEN_ALPHA]={0};
 size_t revCodeTable[LEN_ALPHA]={0};
+size_t fileSize = 104857600;
 
 void count_freq(FILE *inp){
 	fseek(inp,0, SEEK_END);
@@ -43,13 +44,17 @@ void count_freq(FILE *inp){
 	int fd = fileno(inp);
 	char *dat = mmap(0,fsz,PROT_READ|PROT_WRITE,MAP_PRIVATE,fd,0);
 	for(int i=0; i<fsz; i++){
-		freq[*(dat+i)-97]++;
+		freq[*(dat+i)]++;
 	}
 	int unmap_result = munmap(dat, fsz);
 	insertion_sort();
 }
 
 int main(){
+	for(int i = 0; i < LEN_ALPHA; ++i)
+	{
+		alpha[i]=i;
+	}
 	FILE *inp, *out, *dec;
 	printf("Enter file to process: ");
 	char filename[30]="input.txt";
@@ -179,7 +184,7 @@ ll* pop_el(ll *leaf , int ind){
 void make_codes(node *tree, unsigned int code){
 	if (tree->val)
 	{
-		codeTable[(tree->val)-97]=code;
+		codeTable[(tree->val)]=code;
 	}
 	else{
 		make_codes(tree->left,code*10+1);
@@ -190,7 +195,7 @@ void make_codes(node *tree, unsigned int code){
 void show_codeTable(){
 	for (int i = 0; i < LEN_ALPHA; ++i)
 	{
-		printf("%c: %d\n", (i+97), codeTable[i]);
+		printf("%c: %d\n", i, codeTable[i]);
 	}
 }
 
@@ -211,7 +216,7 @@ void compressFile(FILE *inp, FILE *out){
 	int ch=0, make_byte=8;
 	while((ch=fgetc(inp))!=EOF)
 	{
-		int code=revCodeTable[ch-97];
+		int code=revCodeTable[ch];
 		while(code>=1){
 			bit = code%10 - 1;
 			code /= 10;
@@ -256,7 +261,7 @@ void decompressFile(FILE *inp, FILE *out, node *tree){
 			}
 		}
 	}
-	if(ftell(out)!=104857600){
+	if(ftell(out)!=fileSize){
 		fseeko(out,-1,SEEK_END);
 		ftruncate(fileno(out),ftell(out));
 	}
