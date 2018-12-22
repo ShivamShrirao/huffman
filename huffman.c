@@ -17,6 +17,13 @@ typedef struct link_lists
 	struct link_lists *next;
 }ll;
 
+#define LEN_ALPHA 128
+char alpha[LEN_ALPHA]={'\0'};
+size_t freq[LEN_ALPHA]={0};
+size_t codeTable[LEN_ALPHA]={0};
+size_t revCodeTable[LEN_ALPHA]={0};
+size_t fileSize = 104857600;
+
 void insertion_sort();
 void display_tree(node *tree);
 void make_codes(node *tree, unsigned int code);
@@ -29,13 +36,6 @@ ll* show_elem(ll *leaf, int ind);
 ll* pop_el(ll *leaf , int ind);
 void ll_insert(ll *tree, int ind, node *val);
 void push_end(ll *leaf, node *var);
-
-#define LEN_ALPHA 128
-char alpha[LEN_ALPHA]={'\0'};
-size_t freq[LEN_ALPHA]={0};
-size_t codeTable[LEN_ALPHA]={0};
-size_t revCodeTable[LEN_ALPHA]={0};
-size_t fileSize = 104857600;
 
 void count_freq(FILE *inp){
 	fseek(inp,0, SEEK_END);
