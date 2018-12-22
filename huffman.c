@@ -7,7 +7,7 @@
 typedef struct nodes
 {
 	float freq;
-	char val;
+	int val;
 	struct nodes *left, *right;
 }node;
 
@@ -17,34 +17,37 @@ typedef struct link_lists
 	struct link_lists *next;
 }ll;
 
-#define LEN_ALPHA 128
+#define LEN_ALPHA 256
 char alpha[LEN_ALPHA]={'\0'};
 size_t freq[LEN_ALPHA]={0};
 size_t codeTable[LEN_ALPHA]={0};
 size_t revCodeTable[LEN_ALPHA]={0};
-size_t fileSize = 104857600;
+size_t fileSize;
+ll* freeMe;
 
 void insertion_sort();
 void display_tree(node *tree);
-void make_codes(node *tree, unsigned int code);
+void make_codes(node *tree, size_t code);
 void show_codeTable();
 node* build_huff_tree();
 void compressFile(FILE *inp, FILE *out);
 void decompressFile(FILE *inp, FILE *out, node *tree);
 ll* create_list(int len);
 ll* show_elem(ll *leaf, int ind);
-ll* pop_el(ll *leaf , int ind);
+ll* rem_el(ll *leaf , int ind);
 void ll_insert(ll *tree, int ind, node *val);
 void push_end(ll *leaf, node *var);
+void free_list(ll *leaf);
 
 void count_freq(FILE *inp){
 	fseek(inp,0, SEEK_END);
 	size_t fsz = ftell(inp);
+	fileSize = fsz;
 	rewind(inp);
 	int fd = fileno(inp);
 	char *dat = mmap(0,fsz,PROT_READ|PROT_WRITE,MAP_PRIVATE,fd,0);
 	for(int i=0; i<fsz; i++){
-		freq[*(dat+i)]++;
+		freq[(unsigned char)*(dat+i)]++;
 	}
 	int unmap_result = munmap(dat, fsz);
 	insertion_sort();
@@ -57,7 +60,7 @@ int main(){
 	}
 	FILE *inp, *out, *dec;
 	printf("Enter file to process: ");
-	char filename[30]="input.txt";
+	char filename[30]="output.txt";
 	// scanf("%s",filename);
 	inp = fopen(filename,"r");
 	count_freq(inp);
@@ -68,16 +71,17 @@ int main(){
 	int choi;
 	scanf("%d",&choi);
 	if(choi==1){
-		out = fopen("output.txt","wb");
+		out = fopen("output2.txt","wb");
 		compressFile(inp,out);
 		fclose(inp);
 	}
 	else{
-		out = fopen("output.txt","rb");
+		out = fopen("output2.txt","rb");
 		dec = fopen("decomp.txt","wb");
 		decompressFile(out,dec,tree);
 		fclose(dec);
 	}
+	free_list(freeMe);
 	fclose(out);
 	return 0;
 }
@@ -90,25 +94,26 @@ node* build_huff_tree(){
 		n->left=show_elem(leaf,0)->var;
 		n->right=show_elem(leaf,1)->var;
 		n->freq = n->left->freq + n->right->freq;
-		n->val = '\0';
+		n->val = -1;
 		int flg=1;
 		for (int i = 1; i < k; ++i)
 		{
 			if(n->freq <= show_elem(leaf,i)->var->freq){
 				ll_insert(leaf,i,n);
-				leaf=pop_el(leaf,0);
-				leaf=pop_el(leaf,0);
+				leaf=rem_el(leaf,0);
+				leaf=rem_el(leaf,0);
 				flg=0;
 				break;
 			}
 		}
 		if(flg){
 			push_end(leaf, n);
-			leaf=pop_el(leaf,0);
-			leaf=pop_el(leaf,0);
+			leaf=rem_el(leaf,0);
+			leaf=rem_el(leaf,0);
 		}
 		k--;
 	}
+	freeMe=leaf;
 	return leaf->var;
 }
 
@@ -167,7 +172,7 @@ void push_end(ll *leaf, node *var){
 	nx->next->var = var;
 }
 
-ll* pop_el(ll *leaf , int ind){
+ll* rem_el(ll *leaf, int ind){
 	ll *lit=leaf, *px=lit;
 	for (int i = 0; i < ind; ++i)
 	{
@@ -181,14 +186,25 @@ ll* pop_el(ll *leaf , int ind){
 	return leaf;
 }
 
-void make_codes(node *tree, unsigned int code){
-	if (tree->val)
+void free_list(ll *leaf){
+	for (int i = 0; leaf->next; ++i)
 	{
-		codeTable[(tree->val)]=code;
+		ll *lit=leaf->next;
+		free(leaf);
+		leaf=lit;
 	}
-	else{
-		make_codes(tree->left,code*10+1);
-		make_codes(tree->right,code*10+2);
+}
+
+void make_codes(node *tree, size_t code){
+	if(tree){
+		if (tree->val != -1)
+		{
+			codeTable[(tree->val)]=code;
+		}
+		else{
+			make_codes(tree->left,code*10+1);
+			make_codes(tree->right,code*10+2);
+		}
 	}
 }
 
@@ -254,7 +270,7 @@ void decompressFile(FILE *inp, FILE *out, node *tree){
 			else{
 				lit=lit->right;
 			}
-			if(lit->val)
+			if(lit->val != -1)
 			{
 				fputc(lit->val,out);
 				lit=tree;
