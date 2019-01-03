@@ -60,8 +60,8 @@ int main(){
 	}
 	FILE *inp, *out, *dec;
 	printf("Enter file to process: ");
-	char filename[30]="input.txt";
-	// scanf("%s",filename);
+	char filename[30];//="input.txt";
+	scanf("%s",filename);
 	// ADD CHECK FOR FILE EXIST
 	inp = fopen(filename,"r");
 	count_freq(inp);
