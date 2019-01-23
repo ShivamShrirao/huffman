@@ -173,7 +173,7 @@ void push_end(ll *leaf, node *var){
 	nx->next->var = var;
 }
 
-ll* rem_el(ll *leaf, int ind){
+ll* rem_el(ll *leaf, int ind){				// haven't freed mem. I don't remember why
 	ll *lit=leaf, *px=lit;
 	for (int i = 0; i < ind; ++i)
 	{
